@@ -10,9 +10,17 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-// Initialize Groq AI Client
-const groqApiKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
-const groq = groqApiKey ? new Groq({ apiKey: groqApiKey }) : null;
+// Initialize Groq AI Client safely
+let groq: Groq | null = null;
+try {
+  const groqApiKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
+  if (groqApiKey && typeof groqApiKey === 'string' && groqApiKey.trim()) {
+    groq = new Groq({ apiKey: groqApiKey.trim() });
+  }
+} catch (e) {
+  console.error('Groq SDK Initialization Warning:', e);
+}
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

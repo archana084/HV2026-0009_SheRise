@@ -15,6 +15,7 @@ const groqApiKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
 const groq = groqApiKey ? new Groq({ apiKey: groqApiKey }) : null;
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Enable CORS for Vercel deployment & cross-origin API calls
 app.use((req, res, next) => {
@@ -34,6 +35,21 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// Safe Body Normalization Middleware for Vercel Serverless Functions
+app.use((req: any, res, next) => {
+  if (!req.body) {
+    req.body = {};
+  } else if (typeof req.body === 'string') {
+    try {
+      req.body = JSON.parse(req.body);
+    } catch (e) {
+      req.body = {};
+    }
+  }
+  next();
+});
+
 
 
 
@@ -364,9 +380,11 @@ function verifyCollegeAuth(req: express.Request, res: express.Response, next: ex
 
 // College Portal Login (Institution + Email + Password)
 app.post('/api/auth/college/login', (req, res) => {
-  const { institutionId, email, password } = req.body;
+  const body = req.body || {};
+  const { institutionId, email, password } = body;
   const cleanEmail = (email || '').trim().toLowerCase();
   const cleanInstId = (institutionId || '').trim();
+
 
   if (!cleanEmail) {
     return res.status(400).json({ error: 'Registered email address is required.' });
@@ -444,8 +462,9 @@ app.get('/api/health', (req, res) => {
 // 1. AI Credential Audit & Analysis Endpoint
 app.post('/api/ai/analyze-credential', async (req, res) => {
   try {
-    const { credential, verificationStatus } = req.body;
+    const { credential, verificationStatus } = req.body || {};
     if (!credential) {
+
       return res.status(400).json({ error: 'Credential data required' });
     }
 
@@ -516,8 +535,9 @@ Analyze this credential and provide a JSON response with EXACTLY the following s
 // 2. AI Credential Profile Generation Endpoint
 app.post('/api/ai/generate-profile', async (req, res) => {
   try {
-    const { studentName, credentials } = req.body;
+    const { studentName, credentials } = req.body || {};
     if (!credentials || !Array.isArray(credentials)) {
+
       return res.status(400).json({ error: 'Credentials array required' });
     }
 
@@ -568,8 +588,9 @@ Provide a JSON object with EXACTLY this structure:
 // 3. AI Assistant Chatbot Endpoint
 app.post('/api/ai/chat', async (req, res) => {
   try {
-    const { message, history } = req.body;
+    const { message, history } = req.body || {};
     if (!message) {
+
       return res.status(400).json({ error: 'Message is required' });
     }
 
@@ -801,8 +822,9 @@ app.post('/api/credentials', verifyCollegeAuth, (req, res) => {
 
 // Blockchain Registration
 app.post('/api/credentials/register-blockchain', verifyCollegeAuth, (req, res) => {
-  const { credentialId, issuerAddress } = req.body;
+  const { credentialId, issuerAddress } = req.body || {};
   const cleanId = (credentialId || '').trim().toUpperCase();
+
   const credIdx = credentialsStore.findIndex(c => c.id.toUpperCase() === cleanId);
 
   if (credIdx === -1) {
@@ -839,8 +861,9 @@ app.post('/api/credentials/register-blockchain', verifyCollegeAuth, (req, res) =
 
 // Revocation
 app.post('/api/credentials/revoke', verifyCollegeAuth, (req, res) => {
-  const { credentialId } = req.body;
+  const { credentialId } = req.body || {};
   const cleanId = (credentialId || '').trim().toUpperCase();
+
 
   const credIdx = credentialsStore.findIndex(c => c.id.toUpperCase() === cleanId);
   const onChainRecord = blockchainStateStore[cleanId];
@@ -890,8 +913,9 @@ app.post('/api/credentials/revoke', verifyCollegeAuth, (req, res) => {
 
 // Tamper simulation endpoint (modifies academic fields while leaving immutable on-chain hash intact)
 app.post('/api/credentials/tamper', (req, res) => {
-  const { credentialId, updatedFields } = req.body;
+  const { credentialId, updatedFields } = req.body || {};
   const cleanId = (credentialId || '').trim().toUpperCase();
+
   const credIdx = credentialsStore.findIndex(c => c.id.toUpperCase() === cleanId);
 
   if (credIdx === -1) {

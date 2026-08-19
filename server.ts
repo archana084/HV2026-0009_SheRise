@@ -27,6 +27,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Normalize request URL for Vercel Serverless Function rewrites (/api/... vs /...)
+app.use((req, res, next) => {
+  if (req.url && !req.url.startsWith('/api')) {
+    req.url = '/api' + (req.url.startsWith('/') ? '' : '/') + req.url;
+  }
+  next();
+});
+
+
 
 
 // Canonical string generator matching src/utils/hashUtils.ts
@@ -934,6 +943,16 @@ app.get('/api/blockchain/record/:id', (req, res) => {
 app.get('/api/blockchain/state', (req, res) => {
   res.json(blockchainStateStore);
 });
+
+// Global Error Handler for Express API Server
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Express Error Handler caught exception:', err);
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: err?.message || 'An unexpected server error occurred.'
+  });
+});
+
 
 // ==========================================
 // Vite Middleware / Static Serving Setup

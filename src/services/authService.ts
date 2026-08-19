@@ -63,11 +63,11 @@ export const authService = {
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok || !data.success) {
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || !data.success) {
         return {
           success: false,
-          error: data.error || 'Invalid college credentials.',
+          error: data?.error || data?.message || 'Invalid college credentials or server response error.',
         };
       }
 

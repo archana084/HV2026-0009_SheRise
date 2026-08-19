@@ -30,8 +30,11 @@ app.use((req, res, next) => {
 
 // Normalize request URL for Vercel Serverless Function rewrites (/api/... vs /...)
 app.use((req, res, next) => {
-  if (req.url && !req.url.startsWith('/api')) {
-    req.url = '/api' + (req.url.startsWith('/') ? '' : '/') + req.url;
+  if (req.url) {
+    req.url = req.url.replace(/\/index(?:\.ts|\.js)?$/, '');
+    if (!req.url.startsWith('/api')) {
+      req.url = '/api' + (req.url.startsWith('/') ? '' : '/') + req.url;
+    }
   }
   next();
 });

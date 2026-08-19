@@ -1,0 +1,7 @@
+{
+  "name": "TrustCred",
+  "description": "Blockchain-Based Academic Credential Verification System (Solidity Smart Contract Integration, On-Chain Approved College Wallet Authorization Layer, SHA-256 Hashing, & Tamper Detection)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
